@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::env;
+use clap::Parser;
+use colored::Colorize;
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
@@ -12,12 +13,22 @@ struct ExchangeRate {
     Cur_OfficialRate: f32,
 }
 
+#[derive(Parser)]
+struct Cli {
+    /// Date in format YYYY-MM-DD
+    #[clap(short, long)]
+    date: String,
+
+    /// Amount of received USD
+    #[clap(short, long)]
+    amount: Option<f32>,
+}
+
 #[tokio::main]
 async fn main() {
-    let args: Vec<String> = env::args().collect();
-    let date = &args[1];
-    // format YYYY-MM-DD
-    let amount = &args[2].parse::<f32>().unwrap();
+    let args = Cli::parse();
+    let date = &args.date;
+    let amount = args.amount;
 
     let url = format!(
         "https://www.nbrb.by/api/exrates/rates/431?ondate={date}",
@@ -41,8 +52,10 @@ async fn main() {
         _ => println!("Unknown error"),
     }
 
-    // Convert USD to BYN
-    let result = amount * official_rate;
-    println!("Rate: {}", official_rate);
-    println!("Result: {}", result);
+    println!("USD rate for {date} is {rate}", date = date.bold().green(), rate = official_rate.to_string().bold().green());
+
+    if let Some(amount) = amount {
+       let result = amount * official_rate;
+       println!("You received (in BYN): {}", result.to_string().bold().green());
+    }
 }
