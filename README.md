@@ -36,6 +36,14 @@ You can also specify the the amount of USD you would like to convert to BYN:
 # You received (in BYN): 5472.8000
 ```
 
+If you do not specify the date, the program will use the today's date:
+
+```
+./exchanger --amount 2000
+USD rate for today (2023-12-27) is 3.1962
+You received (in BYN): 6392.4000
+```
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
