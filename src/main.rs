@@ -16,11 +16,11 @@ struct ExchangeRate {
 
 #[derive(Parser)]
 struct Cli {
-    /// Date in format YYYY-MM-DD
+    /// Date in format YYYY-MM-DD. Today date will be used if date is not specified
     #[clap(short, long)]
-    date: String,
+    date: Option<String>,
 
-    /// Amount of received USD
+    /// Amount of received USD. If amount is not specified, only rate will be shown
     #[clap(short, long)]
     amount: Option<f32>,
 }
@@ -28,8 +28,11 @@ struct Cli {
 #[tokio::main]
 async fn main() {
     let args = Cli::parse();
-    let date = &args.date;
     let amount = Decimal::from_f32(args.amount.unwrap_or(0.0));
+    let date = match &args.date {
+        Some(date) => date.clone(),
+        None => chrono::Local::now().format("%Y-%m-%d").to_string()
+    };
 
     let url = format!(
         "https://www.nbrb.by/api/exrates/rates/431?ondate={date}",
@@ -51,11 +54,26 @@ async fn main() {
         _ => println!("Unknown error"),
     }
 
-    println!(
-        "USD rate for {date} is {rate}",
-        date = date.bold().green(),
-        rate = official_rate.to_string().bold().green()
-    );
+    let formatted_date = date.bold().green().to_string();
+    let formatted_rate = official_rate.to_string().bold().green().to_string();
+
+    match &args.date {
+        Some(_) => {
+            println!(
+                "USD rate for {date} is {rate}",
+                date = formatted_date,
+                rate = formatted_rate
+            );
+        }
+        None => {
+            println!(
+                "USD rate for today ({date}) is {rate}",
+                date = formatted_date,
+                rate = formatted_rate
+            );
+        }
+    };
+
 
     if let Some(amount) = amount {
         if amount == Decimal::new(0, 0) {
